@@ -109,8 +109,13 @@ export function dialogo({ titulo, subtitulo = "", campos = [], confirmar = "Salv
 }
 
 // ------------------------------------------------------------------ estado local da demonstração
-const CHAVE = "capta-demo-v1";
+// Cada usuário (UID do Firebase) tem o seu próprio estado da demonstração neste navegador.
+let CHAVE = "capta-demo-v1";
 let cache = null;
+export function usarEspacoDoUsuario(uid) {
+  const nova = uid ? `capta-demo-v1:${uid}` : "capta-demo-v1";
+  if (nova !== CHAVE) { CHAVE = nova; cache = null; }
+}
 export function estado() {
   if (cache) return cache;
   try { cache = JSON.parse(localStorage.getItem(CHAVE) || "{}"); } catch { cache = {}; }

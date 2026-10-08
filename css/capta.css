@@ -258,6 +258,34 @@ body:has(.wa) .discador-btn { bottom: 92px; }   /* não cobre o campo de envio d
 .bolha.nota { align-self: center; background: #FDF8EF; border: 1px dashed var(--ambar-borda); max-width: 70%; }
 .bolha small { display: block; text-align: right; font-size: 11px; color: var(--apagado); margin-top: 4px; }
 
+/* ------------------------------------------------------------------ login */
+.login { min-height: 100vh; display: flex; background: #FBFAF8; }
+.login-marca { flex: 0 0 46%; background: var(--marinho); color: #fff; padding: 56px 64px; display: flex; flex-direction: column; gap: 40px; }
+.login-slogan { font-size: 40px; font-weight: 600; letter-spacing: -.025em; line-height: 1.12; text-wrap: pretty; }
+.login-corpo { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; outline: none; }
+.login-topo-movel { display: none; width: 100%; max-width: 400px; align-items: center; gap: 10px; margin-bottom: 36px; }
+.login-cartao { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 22px; }
+.login-google { height: 50px; border: 1px solid var(--borda-4); border-radius: 10px; background: #fff; color: var(--tinta); font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 1px 2px rgba(21, 32, 47, .06); }
+.login-google:hover { background: var(--fundo); }
+.login-google:disabled { opacity: .75; cursor: wait; }
+.login-alerta { padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.45; display: flex; flex-direction: column; gap: 2px; }
+.login-alerta.erro { background: #FBF1EF; border: 1px solid var(--vermelho-borda); color: var(--texto); }
+.login-alerta.erro b { color: var(--vermelho); }
+.login-alerta.info { background: var(--azul-claro); border: 1px solid var(--azul-borda); color: var(--tinta-2); }
+.login-alerta.ok { background: var(--verde-claro); border: 1px solid var(--verde-borda); color: var(--verde); font-weight: 600; }
+.verificando { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--suave); }
+.btn-sair { height: 42px; flex: none; padding: 0 12px; border-radius: 10px; border: 1px solid var(--borda); background: #fff; color: var(--tinta-2);
+  display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.btn-sair:hover { background: var(--fundo); }
+.avatar img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+@media (max-width: 900px) {
+  .login-marca { display: none; }
+  .login-corpo { padding: 24px 20px; justify-content: flex-start; }
+  .login-topo-movel { display: flex; }
+  .btn-sair span { display: none; }
+}
+
 @media print {
   body { background: #fff; }
   .lateral, .topo, .discador-btn, .discador, .toasts, .pular, aside { display: none !important; }

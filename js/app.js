@@ -1,8 +1,10 @@
 // CAPTA — demonstração web. Moldura (menu lateral, barra superior, discador) e roteador por hash (#/...),
 // que funciona no GitHub Pages sem servidor. Cada tela fica em js/telas/*.js e devolve { titulo|trilha, html, montar }.
 import { EMPRESAS, CONVERSAS, LISTAS, ALTERACOES, ORGANIZACAO, PROPOSTAS, nomeEmpresa } from "./dados.js";
-import { avisar, cnpjFmt, digitos, esc, estado, icone, iconePath, iniciais, salvarEstado } from "./util.js";
+import { avisar, cnpjFmt, dialogo, digitos, esc, estado, icone, iconePath, iniciais, salvarEstado, usarEspacoDoUsuario } from "./util.js";
 import { favoritos, tipoCrm } from "./crm.js";
+import { estadoAuth, iniciar as iniciarAutenticacao, sair, usuarioAtual } from "./auth.js";
+import { htmlLogin, ligarLogin } from "./telas/login.js";
 
 const GRUPOS = [
   ["inicio", "Visão geral", "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
@@ -74,7 +76,9 @@ function lateral(ativo) {
 }
 
 function topo(t) {
-  const nome = ORGANIZACAO.responsavel;
+  const u = usuarioAtual();
+  const nome = u?.nome || ORGANIZACAO.responsavel;
+  const foto = u?.foto ? `<img src="${esc(u.foto)}" alt="" referrerpolicy="no-referrer">` : esc(iniciais(nome));
   const cab = t.trilha
     ? `<nav class="trilha" aria-label="Trilha"><a href="${t.trilha[0][1]}">${esc(t.trilha[0][0])}</a>${icone("seta", 14)}<b aria-current="page" title="${esc(t.trilha[1])}">${esc(t.trilha[1])}</b></nav>`
     : `<h1>${esc(t.titulo || "")}</h1>`;
@@ -86,7 +90,8 @@ function topo(t) {
       <input id="busca-global" type="search" placeholder="Buscar por CNPJ, razão social ou nome fantasia" aria-label="Buscar por CNPJ, razão social ou nome fantasia" autocomplete="off">
       <span class="atalho">Ctrl K</span><div class="sugestoes" hidden></div></form>
     <div style="position:relative"><button class="icone-btn" data-sino aria-label="Notificações">${icone("sino", 18)}${ALTERACOES.length ? '<span class="ponto-alerta"></span>' : ""}</button></div>
-    <a class="usuario" href="#/config/org" title="${esc(nome)}"><span class="avatar">${iniciais(nome)}</span><div><b>${esc(nome)}</b><small>${esc(ORGANIZACAO.papel)}</small></div></a>
+    <a class="usuario" href="#/config/org" title="${esc(u ? `${nome} · ${u.email || ""} · conectado com Google` : nome)}"><span class="avatar">${foto}</span><div><b>${esc(nome)}</b><small>${esc(u?.email || ORGANIZACAO.papel)}</small></div></a>
+    ${u ? `<button class="btn-sair" data-sair aria-label="Sair do CAPTA" title="Sair do CAPTA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4.5h4.5a1 1 0 011 1v13a1 1 0 01-1 1H14"></path><path d="M10 16l-4-4 4-4M6 12h10"></path></svg><span>Sair</span></button>` : ""}
   </header>`;
 }
 
@@ -94,7 +99,23 @@ function topo(t) {
 const raiz = document.getElementById("app");
 let geracao = 0;
 
+// Área protegida: sem usuário autenticado, qualquer rota mostra a tela de login (a rota pedida continua no endereço
+// e abre logo depois do login).
+function telaDeAcesso() {
+  const s = estadoAuth();
+  document.querySelector(".discador")?.remove();
+  if (s.fase === "verificando") {
+    raiz.innerHTML = `<div class="verificando" role="status"><span class="spinner"></span>Verificando seu acesso ao CAPTA…</div>`;
+  } else {
+    raiz.innerHTML = htmlLogin();
+    ligarLogin(raiz);
+  }
+  document.title = "Entrar · CAPTA";
+}
+
 async function navegar(manterRolagem = false) {
+  if (estadoAuth().fase !== "autenticado") { telaDeAcesso(); return; }
+  usarEspacoDoUsuario(usuarioAtual()?.uid);
   const rota = lerRota();
   const rolagem = window.scrollY;
   if (!TELAS[rota.chave]) { location.replace("#/inicio"); return; }
@@ -164,6 +185,11 @@ function ligarMoldura() {
     box.querySelector("[data-lidas]").addEventListener("click", () => { box.querySelector(".painel-notificacoes").remove(); box.querySelector(".ponto-alerta")?.remove(); avisar("Notificações marcadas como lidas."); });
   });
   raiz.querySelector("[data-discador]").addEventListener("click", alternarDiscador);
+  raiz.querySelector("[data-sair]")?.addEventListener("click", () => dialogo({
+    titulo: "Sair do CAPTA?", confirmar: "Sair",
+    campos: [{ tipo: "info", texto: "A sessão neste navegador é encerrada. Para voltar, entre de novo com a sua conta Google." }],
+    aoConfirmar: () => { sair(); },
+  }));
 }
 
 function alternarDiscador() {
@@ -194,4 +220,13 @@ document.addEventListener("keydown", (e) => {
 });
 window.addEventListener("hashchange", () => navegar(false));
 window.addEventListener("capta:atualizar", () => navegar(true));   // a tela mudou dados: redesenha sem voltar ao topo
+let faseAnterior = null;
+window.addEventListener("capta:auth", (e) => {
+  const fase = e.detail.fase;
+  // entrou ou saiu: redesenha tudo; dentro do login, só a tela de login muda de estado
+  if (fase === "autenticado" && faseAnterior === "autenticado") return;
+  faseAnterior = fase;
+  navegar(false);
+});
 navegar();
+iniciarAutenticacao();

@@ -41,6 +41,54 @@ O que você muda (favoritos, etapas, notas, processos cadastrados, mensagens) fi
 CNPJs e processos são inventados. Os números de CNPJ e CNJ têm dígito verificador válido só para o formato ficar
 realista.
 
+## Login (Firebase Authentication · Google)
+
+O acesso à demonstração exige login com Google, pelo projeto Firebase **CAPTA** (`capta-3e40e`).
+
+- **Sem login:** qualquer endereço (`#/inicio`, `#/empresa/...`) mostra a tela "Bem-vindo ao CAPTA". A rota pedida
+  abre logo depois do login.
+- **"Continuar com Google":**
+  - abre a janela oficial do Google (`signInWithPopup` com `GoogleAuthProvider`);
+  - se o navegador bloquear a janela, segue por redirecionamento.
+- **Sessão:** fica guardada pelo Firebase no navegador (`browserLocalPersistence`). Atualizar a página não pede login
+  de novo.
+- **Sair:** o botão "Sair", na barra superior, encerra a sessão (`signOut`) e volta para o login.
+- **Estados da tela:**
+  - verificando;
+  - carregando ("Conectando com o Google…");
+  - concluído;
+  - erros explicados em linguagem simples: sem internet, janela fechada, endereço não autorizado etc.
+- **Usuário:** identificado pelo **UID do Firebase**. `perfil()` em `js/auth.js` já devolve o formato da evolução
+  multiempresa:
+  - UID → usuário → tenant → plano → permissões → integrações.
+  - O estado da demonstração (favoritos, Kanban, notas) fica separado por UID neste navegador.
+
+**Arquivos:**
+
+| Arquivo | Função |
+|---|---|
+| `js/auth.js` | serviço de autenticação |
+| `js/telas/login.js` | tela de login |
+| `js/firebase-config.js` | configuração Web pública |
+| `assets/vendor/firebase/` | SDK modular oficial 12.19.0, cópia local |
+
+Não há Admin SDK, service account nem chave privada, e não deve haver.
+
+**Limite importante:** esta é uma página estática. O login controla quem **vê** a demonstração, e os dados são todos
+fictícios e públicos no repositório. Quando o CAPTA real usar o mesmo login, a conferência será feita também no
+servidor.
+
+### Configurar (uma vez)
+
+1. **Configuração Web:** em `js/firebase-config.js`, preencha `apiKey` e `appId`. Eles ficam em **Firebase Console ›
+   ⚙ Configurações do projeto › Geral › Seus apps › (app Web) › Config**. São valores públicos.
+2. **Domínios autorizados:** em **Firebase Console › Authentication › Settings (Configurações) › Authorized domains
+   (Domínios autorizados)**, inclua:
+   - `capta.app.br`
+   - `alexsandermoreir.github.io`
+   - `127.0.0.1`, para testar no computador (`localhost` já vem incluído)
+   - mais adiante, `app.capta.app.br`
+
 ## Estrutura
 
 ```
